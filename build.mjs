@@ -14,6 +14,19 @@ const SITEMAP_PATH = path.resolve("sitemap.xml");
 const LLMS_PATH = path.resolve("llms.txt");
 
 const IMAGE_PLACEHOLDER_FALLBACK = "https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image";
+const CARD_IMAGE_WIDTH = 400; // 商品カード表示用の画像幅(px)。w1000のような大きすぎるサムネイルの転送量を削減する
+
+// Google Driveのサムネイル画像URLのみ、sz=wNNNパラメータをカード表示に必要な幅へ縮小する。
+// drive.google.com/thumbnail以外のURL(placehold.co等)はそのまま通す。
+function resizeDriveImage(url, width = CARD_IMAGE_WIDTH) {
+  if (!url) return url;
+  if (!/drive\.google\.com\/thumbnail/.test(url)) return url;
+  if (/[?&]sz=/.test(url)) {
+    return url.replace(/([?&]sz=)w?\d+/, `$1w${width}`);
+  }
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}sz=w${width}`;
+}
 
 function log(msg) {
   console.log(`[build.mjs] ${msg}`);
@@ -68,13 +81,14 @@ function renderProductCardHtml(p) {
   const name = escapeHtml(p.name);
   const description = escapeHtml(p.description);
   const price = Number(p.price) || 0;
-  const imgUrl = escapeHtml(p.image || IMAGE_PLACEHOLDER_FALLBACK);
+  const imgUrl = escapeHtml(resizeDriveImage(p.image) || IMAGE_PLACEHOLDER_FALLBACK);
 
   return `
           <div class="bg-white rounded-[16px] border border-[#e3dbc9] overflow-hidden shadow-sm flex flex-col">
             <div class="relative aspect-square bg-[#f4efe6]">
               <img src="${imgUrl}" alt="${name}"
                 class="w-full h-full object-cover"
+                loading="lazy" decoding="async"
                 onerror="this.src='https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image'">
               ${soldOut ? `<div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                 <span class="text-white text-xs font-black tracking-wider border border-white px-3 py-1 rounded-full">SOLD OUT</span>
