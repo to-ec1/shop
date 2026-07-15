@@ -1,0 +1,68 @@
+# ============================================================
+# .github/workflows/build-ssr.yml
+# ============================================================
+# 役割: build.mjs を定期実行し、GAS APIから取得した商品データを
+#       index.html / robots.txt / sitemap.xml / llms.txt に焼き込んで
+#       変更があればリポジトリにcommit&pushする。
+#       pushされるとCloudflare Pagesが自動で再デプロイする。
+#
+# 事前準備(必須):
+#   1. リポジトリの Settings > Secrets and variables > Actions で
+#      シークレット `PRODUCTS_API_URL` を登録する
+#      (値: GAS Web AppのデプロイURL。例 https://script.google.com/macros/s/XXXX/exec)
+#   2. このリポジトリの Settings > Actions > General > Workflow permissions で
+#      "Read and write permissions" を選択しておく(commit&pushに必要)
+# ============================================================
+
+name: Build SSR (AI-SEO静的HTML焼き込み)
+
+on:
+  schedule:
+    # 3時間おき(UTC基準。JSTとは+9時間のズレがある点に注意)
+    - cron: "0 */3 * * *"
+  workflow_dispatch: {}
+  # index.html や build.mjs 自体を修正した際に手動で試したい場合はpushでも動かせるようにしておく
+  push:
+    branches: [main]
+    paths:
+      - "build.mjs"
+      - ".github/workflows/build-ssr.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-ssr
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run build.mjs (商品データをSSR静的HTMLに焼き込み)
+        env:
+          PRODUCTS_API_URL: ${{ secrets.PRODUCTS_API_URL }}
+        run: node build.mjs
+
+      - name: Git設定
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: 変更があればcommit&push
+        run: |
+          if git diff --quiet; then
+            echo "変更なし。commitはスキップします。"
+          else
+            git add index.html robots.txt sitemap.xml llms.txt
+            git commit -m "chore: SSR静的HTML自動更新 ($(date -u +'%Y-%m-%dT%H:%M:%SZ'))"
+            git push
+          fi
