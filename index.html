@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>テイクオンストア | TAKE ON Co., Ltd. 直販ECサイト</title>
+    <meta name="description" content="テイクオン株式会社(TAKE ON Co., Ltd.)の直販ECサイト。雑貨・コスメ・サプリ・食品などを卸価格に近い形で個人・法人向けに直接販売しています。お支払いは銀行振込のみ対応。" />
+    <link rel="icon" href="logo.png" type="image/png" />
+
+    <!-- SSR:JSONLD:START (build.mjsが商品データからJSON-LD(schema.org ItemList/Product)を生成しこの間に書き込みます。手動編集不可) -->
+    <!-- SSR:JSONLD:END -->
+
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+      body {
+        font-family: 'Noto Sans JP', 'Inter', sans-serif;
+        background-color: #fbf9f5;
+        color: #1c2514;
+      }
+      .cart-drawer {
+        transition: transform 0.3s ease;
+      }
+      .cart-drawer.closed {
+        transform: translateX(100%);
+      }
+      .cart-overlay {
+        transition: opacity 0.3s ease;
+      }
+      .qty-input::-webkit-inner-spin-button,
+      .qty-input::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+      .toast {
+        transition: transform 0.3s ease, opacity 0.3s ease;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen flex flex-col">
+
+    <!-- ヘッダー -->
+    <header class="sticky top-0 z-40 backdrop-blur-md border-b border-[#e3dbc9] py-4 px-6 md:px-12 flex justify-between items-center bg-[#fbf9f5]/90">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-full overflow-hidden shadow-md bg-[#2d3a24] flex items-center justify-center">
+          <img src="logo.png" alt="テイクオン株式会社ロゴ" class="w-full h-full object-cover" onerror="this.style.display='none'; this.parentElement.innerHTML='<span class=\'text-[#c2a373] font-black text-sm\'>TO</span>'" />
+        </div>
+        <div>
+          <h1 class="text-base md:text-lg font-bold tracking-tight text-[#2d3a24]">
+            テイクオンストア
+          </h1>
+          <p class="text-[10px] tracking-widest text-[#6b7c5c]">TAKE ON Co., Ltd. Direct Store</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="https://take-on.example.com" class="hidden sm:inline text-xs font-medium text-[#6b7c5c] hover:text-[#2d3a24] transition-colors">
+          コーポレートサイトへ
+        </a>
+        <button
+          id="cart-open-btn"
+          class="relative flex items-center gap-1.5 bg-[#2d3a24] hover:opacity-90 text-[#fbf9f5] px-4 py-2.5 rounded-[16px] text-xs font-bold tracking-wider transition shadow-md"
+        >
+          <i data-lucide="shopping-cart" class="w-4 h-4"></i>
+          <span class="hidden sm:inline">カート</span>
+          <span id="cart-count" class="absolute -top-2 -right-2 bg-[#c2a373] text-[#2d3a24] text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">0</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- お知らせバー -->
+    <div class="bg-[#2d3a24] text-[#fbf9f5] text-xs py-2 px-4 text-center">
+      <span class="inline-flex items-center gap-1.5">
+        <i data-lucide="banknote" class="w-3.5 h-3.5 text-[#c2a373]"></i>
+        お支払いは銀行振込のみとなります。ご注文確定後、振込先をご案内いたします。
+      </span>
+    </div>
+
+    <!-- 商品一覧 -->
+    <main class="flex-1 px-6 md:px-12 py-10 max-w-6xl mx-auto w-full">
+      <div class="mb-8">
+        <h2 class="text-2xl md:text-3xl font-black text-[#2d3a24] mb-2">商品一覧</h2>
+        <p class="text-sm text-[#6b7c5c]">在庫状況は随時更新されます。ご不明点はお問い合わせください。</p>
+      </div>
+
+      <div id="loading-state" class="hidden text-center py-20 text-[#6b7c5c] text-sm">
+        商品情報を読み込んでいます...
+      </div>
+
+      <div id="category-tabs" class="flex gap-2 overflow-x-auto pb-2 mb-6 hidden">
+        <!-- JSで動的生成 -->
+      </div>
+
+      <!-- SSR:PRODUCTS:START (build.mjsが商品データから可視HTML(実テキスト)を生成しこの間に書き込みます。手動編集不可) -->
+      <div id="product-grid" class="grid grid-cols-2 gap-4 md:gap-6 hidden">
+        <!-- JSで動的生成。ビルド前はJSがfetch/MOCKデータから描画する -->
+      </div>
+      <!-- SSR:PRODUCTS:END -->
+
+      <div id="empty-state" class="hidden text-center py-20 text-[#6b7c5c] text-sm">
+        現在表示できる商品がありません。
+      </div>
+    </main>
+
+    <footer class="bg-[#1c2514] text-slate-400 py-8 px-6 md:px-12 text-center text-[10px]">
+      <p>© 2026 TAKE ON Co., Ltd. All Rights Reserved.</p>
+    </footer>
+
+    <!-- カートドロワー -->
+    <div id="cart-overlay" class="cart-overlay hidden fixed inset-0 bg-black/40 z-50 opacity-0"></div>
+    <aside id="cart-drawer" class="cart-drawer closed fixed top-0 right-0 h-full w-full sm:w-[420px] bg-[#fbf9f5] z-50 shadow-2xl flex flex-col">
+      <div class="flex items-center justify-between px-6 py-5 border-b border-[#e3dbc9]">
+        <h3 class="text-lg font-bold text-[#2d3a24] flex items-center gap-2">
+          <i data-lucide="shopping-cart" class="w-5 h-5"></i>
+          カート
+        </h3>
+        <button id="cart-close-btn" class="text-[#6b7c5c] hover:text-[#2d3a24] transition-colors">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- カート内訳(画面1) -->
+      <div id="cart-view" class="flex-1 overflow-y-auto px-6 py-4">
+        <div id="cart-items" class="space-y-4"></div>
+        <div id="cart-empty-msg" class="hidden text-center text-sm text-[#6b7c5c] py-16">
+          <i data-lucide="shopping-cart" class="w-10 h-10 mx-auto mb-3 opacity-30"></i>
+          カートに商品がありません
+        </div>
+      </div>
+      <div id="cart-footer" class="border-t border-[#e3dbc9] px-6 py-5 space-y-3">
+        <div class="flex justify-between text-sm">
+          <span class="text-[#6b7c5c]">合計</span>
+          <span id="cart-total" class="text-lg font-black text-[#2d3a24]">¥0</span>
+        </div>
+        <button id="checkout-open-btn" class="w-full bg-[#2d3a24] hover:opacity-90 text-[#fbf9f5] py-3.5 rounded-[16px] font-bold text-sm shadow-md transition">
+          ご注文手続きへ進む
+        </button>
+      </div>
+
+      <!-- 注文フォーム(画面2) -->
+      <div id="checkout-view" class="hidden flex-1 overflow-y-auto px-6 py-4">
+        <button id="checkout-back-btn" class="flex items-center gap-1 text-xs text-[#6b7c5c] hover:text-[#2d3a24] mb-4 transition-colors">
+          <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> カートに戻る
+        </button>
+
+        <form id="order-form" class="space-y-4">
+          <div>
+            <label class="text-xs font-bold text-[#2d3a24]">お名前<span class="text-red-500">*</span></label>
+            <input type="text" name="name" required class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24]" placeholder="山田 太郎">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-[#2d3a24]">フリガナ<span class="text-red-500">*</span></label>
+            <input type="text" name="kana" required class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24]" placeholder="ヤマダ タロウ">
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-xs font-bold text-[#2d3a24]">郵便番号<span class="text-red-500">*</span></label>
+              <input type="text" name="zip" required class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24]" placeholder="123-4567">
+            </div>
+            <div>
+              <label class="text-xs font-bold text-[#2d3a24]">電話番号<span class="text-red-500">*</span></label>
+              <input type="tel" name="phone" required class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24]" placeholder="090-1234-5678">
+            </div>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-[#2d3a24]">ご住所<span class="text-red-500">*</span></label>
+            <input type="text" name="address" required class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24]" placeholder="千葉県千葉市若葉区...">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-[#2d3a24]">メールアドレス<span class="text-red-500">*</span></label>
+            <input type="email" name="email" required class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24]" placeholder="example@mail.com">
+          </div>
+          <div>
+            <label class="text-xs font-bold text-[#2d3a24]">備考</label>
+            <textarea name="note" rows="2" class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24]" placeholder="配送に関するご要望など"></textarea>
+          </div>
+
+          <div class="bg-[#f4efe6] border border-[#e3dbc9] rounded-[12px] p-4 space-y-1">
+            <div class="flex justify-between text-xs text-[#6b7c5c]">
+              <span>ご注文内容</span>
+              <span id="checkout-item-count">0点</span>
+            </div>
+            <div class="flex justify-between text-base font-black text-[#2d3a24]">
+              <span>お支払い予定額</span>
+              <span id="checkout-total">¥0</span>
+            </div>
+          </div>
+
+          <p class="text-[11px] text-[#6b7c5c] leading-relaxed">
+            ご注文確定後、振込先口座と注文番号をメールにてご案内します。<b class="text-[#2d3a24]">振込時のお名前(振込人名義)には、メールに記載の注文番号を含めてご入力ください。</b>入金確認後、順次発送いたします。
+          </p>
+
+          <button type="submit" id="submit-order-btn" class="w-full bg-[#2d3a24] hover:opacity-90 text-[#fbf9f5] py-3.5 rounded-[16px] font-bold text-sm shadow-md transition">
+            この内容で注文する
+          </button>
+        </form>
+      </div>
+
+      <!-- 完了画面(画面3) -->
+      <div id="complete-view" class="hidden flex-1 overflow-y-auto px-6 py-8 text-center">
+        <i data-lucide="check-circle-2" class="w-14 h-14 mx-auto text-[#2d3a24] mb-4"></i>
+        <h4 class="text-lg font-black text-[#2d3a24] mb-2">ご注文ありがとうございました</h4>
+        <p class="text-sm text-[#6b7c5c] mb-6">注文番号を必ずお控えください。振込人名義にこの番号をご記入ください。</p>
+        <div class="bg-[#f4efe6] border border-[#e3dbc9] rounded-[12px] p-4 mb-6">
+          <p class="text-[10px] text-[#6b7c5c] uppercase tracking-wider">注文番号</p>
+          <p id="order-number-display" class="text-xl font-black text-[#2d3a24] tracking-wider"></p>
+        </div>
+        <div class="bg-white border border-[#e3dbc9] rounded-[12px] p-4 mb-6 text-left text-xs text-[#1c2514] space-y-1">
+          <p class="font-bold text-[#2d3a24] mb-1">お振込先</p>
+          <p>〇〇銀行 〇〇支店(店番:000)</p>
+          <p>普通 0000000</p>
+          <p>テイクオン(カ</p>
+        </div>
+        <button id="close-complete-btn" class="w-full bg-[#2d3a24] hover:opacity-90 text-[#fbf9f5] py-3 rounded-[16px] font-bold text-sm transition">
+          閉じる
+        </button>
+      </div>
+    </aside>
+
+    <!-- トースト通知 -->
+    <div id="toast" class="toast fixed bottom-6 left-1/2 -translate-x-1/2 bg-[#2d3a24] text-[#fbf9f5] px-5 py-3 rounded-full text-xs font-bold shadow-lg opacity-0 pointer-events-none z-[60]"></div>
+
+    <script>
+      // ============================================================
+      // 設定
+      // ============================================================
+      // TODO: GAS APIが完成したらこのURLに差し替える
+      const PRODUCTS_API_URL = null; // 例: "https://script.google.com/macros/s/XXXX/exec?action=products"
+      const ORDER_API_URL = null;    // 例: "https://script.google.com/macros/s/XXXX/exec"
+
+      // Google Drive画像ID → 表示用URL変換
+      // lh3.googleusercontent.com 形式の方がuc?export=viewより安定して表示される
+      function driveImageUrl(fileId, width = 500) {
+        if (!fileId) return "https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image";
+        return `https://lh3.googleusercontent.com/d/${fileId}=w${width}`;
+      }
+
+      // ============================================================
+      // モック商品データ(GAS API実装までの仮データ。JAN/画像ID等は実データに差し替え予定)
+      // ============================================================
+      const MOCK_PRODUCTS = [
+        { jan: "4901234567890", name: "サンプル商品A(一般雑貨)", price: 1200, stock: 12, driveImageId: "", category: "雑貨" },
+        { jan: "4901234567891", name: "サンプル商品B(美容ケア用品)", price: 2480, stock: 5, driveImageId: "", category: "コスメ" },
+        { jan: "4901234567892", name: "サンプル商品C(生活雑貨セット)", price: 980, stock: 30, driveImageId: "", category: "雑貨" },
+        { jan: "4901234567893", name: "サンプル商品D(健康グッズ)", price: 3600, stock: 0, driveImageId: "", category: "サプリ" },
+        { jan: "4901234567894", name: "サンプル商品E(キッチン用品)", price: 1580, stock: 8, driveImageId: "", category: "雑貨" },
+        { jan: "4901234567895", name: "サンプル商品F(収納アイテム)", price: 2200, stock: 3, driveImageId: "", category: "食品" },
+      ];
+
+      // SSR:FALLBACK:START (build.mjsがビルド時点の商品データのスナップショットをここに書き込みます。手動編集不可)
+      // ライブAPI(PRODUCTS_API_URL)へのfetchが失敗した場合のみ使用される。ビルド前はnull。
+      const SSR_FALLBACK_PRODUCTS = null;
+      // SSR:FALLBACK:END
+
+      let products = [];
+      let categories = []; // シートに登場した順のカテゴリ一覧
+      let activeCategory = "すべて";
+      let cart = loadCart(); // { jan: qty, ... }
+
+      // ============================================================
+      // 商品データ取得
+      // ============================================================
+      async function fetchProducts() {
+        if (!PRODUCTS_API_URL) {
+          // API未実装の間はモックデータを使用
+          return MOCK_PRODUCTS;
+        }
+        const res = await fetch(PRODUCTS_API_URL);
+        const data = await res.json();
+        if (!data.ok) throw new Error(data.message || "商品データ取得に失敗しました");
+        return data.products || [];
+      }
+
+      // シートに登場した順(=行順)でカテゴリの一覧を作る。重複は除去。
+      function buildCategories() {
+        const seen = new Set();
+        const list = [];
+        products.forEach(p => {
+          const c = p.category || "その他";
+          if (!seen.has(c)) {
+            seen.add(c);
+            list.push(c);
+          }
+        });
+        return list;
+      }
+
+      function renderCategoryTabs() {
+        const tabsEl = document.getElementById('category-tabs');
+        if (categories.length <= 1) {
+          tabsEl.classList.add('hidden');
+          return;
+        }
+        tabsEl.classList.remove('hidden');
+
+        const allTabs = ["すべて", ...categories];
+        tabsEl.innerHTML = allTabs.map(cat => {
+          const isActive = cat === activeCategory;
+          return `
+            <button
+              onclick="selectCategory('${escapeHtml(cat)}')"
+              class="whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition border ${
+                isActive
+                  ? 'bg-[#2d3a24] text-[#fbf9f5] border-[#2d3a24]'
+                  : 'bg-white text-[#6b7c5c] border-[#e3dbc9] hover:border-[#2d3a24]'
+              }"
+            >${escapeHtml(cat)}</button>
+          `;
+        }).join('');
+      }
+
+      function selectCategory(cat) {
+        activeCategory = cat;
+        // 共有可能なURLにするためハッシュに反映(#category=コスメ)
+        if (cat === "すべて") {
+          history.replaceState(null, "", location.pathname + location.search);
+        } else {
+          location.hash = "category=" + encodeURIComponent(cat);
+        }
+        renderCategoryTabs();
+        renderProductGrid();
+      }
+
+      function getVisibleProducts() {
+        if (activeCategory === "すべて") return products;
+        return products.filter(p => (p.category || "その他") === activeCategory);
+      }
+
+      function renderProducts() {
+        const loading = document.getElementById('loading-state');
+        loading.classList.add('hidden');
+
+        categories = buildCategories();
+        renderCategoryTabs();
+        renderProductGrid();
+      }
+
+      function renderProductGrid() {
+        const grid = document.getElementById('product-grid');
+        const empty = document.getElementById('empty-state');
+        const visible = getVisibleProducts();
+
+        if (products.length === 0) {
+          grid.classList.add('hidden');
+          empty.classList.remove('hidden');
+          return;
+        }
+        empty.classList.add('hidden');
+        grid.classList.remove('hidden');
+
+        if (visible.length === 0) {
+          grid.innerHTML = `<p class="col-span-2 text-center text-sm text-[#6b7c5c] py-10">このカテゴリには現在商品がありません</p>`;
+          return;
+        }
+
+        grid.innerHTML = visible.map(p => {
+          const soldOut = p.stock <= 0;
+          return `
+          <div class="bg-white rounded-[16px] border border-[#e3dbc9] overflow-hidden shadow-sm flex flex-col">
+            <div class="relative aspect-square bg-[#f4efe6]">
+              <img src="${driveImageUrl(p.driveImageId)}" alt="${escapeHtml(p.name)}"
+                class="w-full h-full object-cover"
+                onerror="this.src='https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image'">
+              ${soldOut ? `<div class="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <span class="text-white text-xs font-black tracking-wider border border-white px-3 py-1 rounded-full">SOLD OUT</span>
+              </div>` : ''}
+            </div>
+            <div class="p-3 md:p-4 flex flex-col flex-1">
+              <p class="text-[10px] text-[#6b7c5c] mb-1">JAN: ${p.jan}</p>
+              <h3 class="text-xs md:text-sm font-bold text-[#2d3a24] leading-snug mb-2 flex-1">${escapeHtml(p.name)}</h3>
+              <p class="text-base md:text-lg font-black text-[#2d3a24] mb-3">¥${p.price.toLocaleString()}</p>
+              <button
+                onclick="addToCart('${p.jan}')"
+                ${soldOut ? 'disabled' : ''}
+                class="w-full text-xs font-bold py-2.5 rounded-[12px] transition ${soldOut ? 'bg-[#e3dbc9] text-[#6b7c5c] cursor-not-allowed' : 'bg-[#2d3a24] text-[#fbf9f5] hover:opacity-90'}"
+              >
+                ${soldOut ? '在庫切れ' : 'カートに入れる'}
+              </button>
+            </div>
+          </div>`;
+        }).join('');
+      }
+
+      function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      // ============================================================
+      // カート操作(localStorageに保存。実店舗サイトなので使用可)
+      // ============================================================
+      function loadCart() {
+        try {
+          return JSON.parse(localStorage.getItem('takeon_cart') || '{}');
+        } catch (e) {
+          return {};
+        }
+      }
+
+      function saveCart() {
+        localStorage.setItem('takeon_cart', JSON.stringify(cart));
+      }
+
+      function addToCart(jan) {
+        const product = products.find(p => p.jan === jan);
+        if (!product || product.stock <= 0) return;
+        cart[jan] = (cart[jan] || 0) + 1;
+        saveCart();
+        updateCartUI();
+        showToast(`${product.name} をカートに追加しました`);
+      }
+
+      function changeQty(jan, delta) {
+        if (!cart[jan]) return;
+        cart[jan] += delta;
+        if (cart[jan] <= 0) delete cart[jan];
+        saveCart();
+        updateCartUI();
+      }
+
+      function removeFromCart(jan) {
+        delete cart[jan];
+        saveCart();
+        updateCartUI();
+      }
+
+      function getCartItems() {
+        return Object.entries(cart).map(([jan, qty]) => {
+          const product = products.find(p => p.jan === jan);
+          return product ? { ...product, qty } : null;
+        }).filter(Boolean);
+      }
+
+      function getCartTotal() {
+        return getCartItems().reduce((sum, item) => sum + item.price * item.qty, 0);
+      }
+
+      function getCartCount() {
+        return Object.values(cart).reduce((sum, qty) => sum + qty, 0);
+      }
+
+      function updateCartUI() {
+        const items = getCartItems();
+        const total = getCartTotal();
+        const count = getCartCount();
+
+        document.getElementById('cart-count').textContent = count;
+        document.getElementById('cart-total').textContent = `¥${total.toLocaleString()}`;
+        document.getElementById('checkout-total').textContent = `¥${total.toLocaleString()}`;
+        document.getElementById('checkout-item-count').textContent = `${count}点`;
+
+        const itemsContainer = document.getElementById('cart-items');
+        const emptyMsg = document.getElementById('cart-empty-msg');
+        const footer = document.getElementById('cart-footer');
+
+        if (items.length === 0) {
+          itemsContainer.innerHTML = '';
+          emptyMsg.classList.remove('hidden');
+          footer.classList.add('hidden');
+          return;
+        }
+        emptyMsg.classList.add('hidden');
+        footer.classList.remove('hidden');
+
+        itemsContainer.innerHTML = items.map(item => `
+          <div class="flex gap-3 items-start">
+            <img src="${driveImageUrl(item.driveImageId, 100)}" class="w-14 h-14 object-cover rounded-[10px] border border-[#e3dbc9]"
+              onerror="this.src='https://placehold.co/100x100/e3dbc9/2d3a24?text=-'">
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-bold text-[#2d3a24] truncate">${escapeHtml(item.name)}</p>
+              <p class="text-xs text-[#6b7c5c] mb-1.5">¥${item.price.toLocaleString()}</p>
+              <div class="flex items-center gap-2">
+                <button onclick="changeQty('${item.jan}', -1)" class="w-6 h-6 rounded-full border border-[#e3dbc9] flex items-center justify-center text-xs hover:bg-[#f4efe6]">−</button>
+                <span class="text-xs font-bold w-5 text-center">${item.qty}</span>
+                <button onclick="changeQty('${item.jan}', 1)" class="w-6 h-6 rounded-full border border-[#e3dbc9] flex items-center justify-center text-xs hover:bg-[#f4efe6]">+</button>
+                <button onclick="removeFromCart('${item.jan}')" class="ml-auto text-[10px] text-[#6b7c5c] hover:text-red-600 underline">削除</button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+      }
+
+      // ============================================================
+      // 注文送信
+      // ============================================================
+      function generateOrderNumber() {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const datePart = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+        const randPart = Math.floor(Math.random() * 9000 + 1000);
+        return `TO-${datePart}-${randPart}`;
+      }
+
+      async function submitOrder(e) {
+        e.preventDefault();
+        const form = e.target;
+        const submitBtn = document.getElementById('submit-order-btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "送信中...";
+
+        const formData = new FormData(form);
+        const customer = Object.fromEntries(formData);
+        const orderNumber = generateOrderNumber();
+        const items = getCartItems();
+
+        const payload = {
+          orderNumber,
+          customer,
+          items: items.map(i => ({ jan: i.jan, name: i.name, price: i.price, qty: i.qty })),
+          total: getCartTotal(),
+          createdAt: new Date().toISOString(),
+        };
+
+        try {
+          if (ORDER_API_URL) {
+            console.log("注文送信:", payload);
+            const res = await fetch(ORDER_API_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'text/plain' },
+              body: JSON.stringify(payload),
+            });
+            const result = await res.json();
+            if (!result.ok) throw new Error(result.message || '送信失敗');
+          } else {
+            // API未実装の間は送信をスキップして完了画面だけ確認できるようにする
+            console.warn("ORDER_API_URL 未設定のため、注文はサーバーに送信されていません。", payload);
+          }
+
+          // 完了処理
+          document.getElementById('order-number-display').textContent = orderNumber;
+          cart = {};
+          saveCart();
+          updateCartUI();
+          showView('complete');
+
+        } catch (err) {
+          console.error("注文送信エラー:", err);
+          alert("送信に失敗しました。時間をおいて再度お試しください。");
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.textContent = originalText;
+        }
+      }
+
+      // ============================================================
+      // カートドロワー / 画面遷移
+      // ============================================================
+      function openCart() {
+        document.getElementById('cart-overlay').classList.remove('hidden');
+        requestAnimationFrame(() => {
+          document.getElementById('cart-overlay').classList.remove('opacity-0');
+        });
+        document.getElementById('cart-drawer').classList.remove('closed');
+        showView('cart');
+      }
+
+      function closeCart() {
+        document.getElementById('cart-overlay').classList.add('opacity-0');
+        document.getElementById('cart-drawer').classList.add('closed');
+        setTimeout(() => {
+          document.getElementById('cart-overlay').classList.add('hidden');
+        }, 300);
+      }
+
+      function showView(view) {
+        document.getElementById('cart-view').classList.toggle('hidden', view !== 'cart');
+        document.getElementById('cart-footer').classList.toggle('hidden', view !== 'cart' || getCartItems().length === 0);
+        document.getElementById('checkout-view').classList.toggle('hidden', view !== 'checkout');
+        document.getElementById('complete-view').classList.toggle('hidden', view !== 'complete');
+      }
+
+      function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.remove('opacity-0');
+        toast.classList.add('opacity-100');
+        clearTimeout(window._toastTimer);
+        window._toastTimer = setTimeout(() => {
+          toast.classList.remove('opacity-100');
+          toast.classList.add('opacity-0');
+        }, 2000);
+      }
+
+      // ============================================================
+      // イベント登録・初期化
+      // ============================================================
+      document.getElementById('cart-open-btn').addEventListener('click', openCart);
+      document.getElementById('cart-close-btn').addEventListener('click', closeCart);
+      document.getElementById('cart-overlay').addEventListener('click', closeCart);
+      document.getElementById('checkout-open-btn').addEventListener('click', () => showView('checkout'));
+      document.getElementById('checkout-back-btn').addEventListener('click', () => showView('cart'));
+      document.getElementById('order-form').addEventListener('submit', submitOrder);
+      document.getElementById('close-complete-btn').addEventListener('click', closeCart);
+
+      // URLハッシュ(#category=コスメ)から初期カテゴリを復元。共有リンク用。
+      function getCategoryFromHash() {
+        const match = location.hash.match(/category=([^&]+)/);
+        return match ? decodeURIComponent(match[1]) : "すべて";
+      }
+
+      (async function init() {
+        try {
+          products = await fetchProducts();
+          activeCategory = getCategoryFromHash();
+          renderProducts();
+        } catch (err) {
+          // ライブAPI取得に失敗した場合は、build.mjsが焼き込んだSSR静的HTML(商品グリッド)を
+          // 上書きせずそのまま維持する。products配列だけはカート操作用にfallbackデータで補う。
+          console.error("商品データ取得エラー(SSR静的コンテンツを維持します):", err);
+          products = SSR_FALLBACK_PRODUCTS || [];
+          document.getElementById('loading-state').classList.add('hidden');
+          document.getElementById('empty-state').classList.add('hidden');
+          document.getElementById('product-grid').classList.remove('hidden');
+        }
+        updateCartUI();
+        lucide.createIcons();
+      })();
+    </script>
+  </body>
+</html>
