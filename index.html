@@ -458,11 +458,15 @@
     </header>
 
     <!-- お知らせバー -->
-    <div class="bg-[#2d3a24] text-[#fbf9f5] text-xs py-2 px-4 text-center">
-      <span class="inline-flex items-center gap-1.5">
+    <div class="bg-[#2d3a24] text-[#fbf9f5] text-xs py-2 px-4 text-center space-y-1">
+      <div class="inline-flex items-center gap-1.5">
         <i data-lucide="banknote" class="w-3.5 h-3.5 text-[#c2a373]"></i>
         お支払いは銀行振込のみとなります。ご注文確定後、振込先をご案内いたします。
-      </span>
+      </div>
+      <div class="inline-flex items-center gap-1.5 sm:ml-4">
+        <i data-lucide="truck" class="w-3.5 h-3.5 text-[#c2a373]"></i>
+        税込33,000円以上のご注文で送料無料(通常送料770円、北海道・沖縄1,100円／離島発送不可)
+      </div>
     </div>
 
     <!-- 商品一覧 -->
@@ -470,6 +474,17 @@
       <div class="mb-8">
         <h2 class="text-2xl md:text-3xl font-black text-[#2d3a24] mb-2">商品一覧</h2>
         <p class="text-sm text-[#6b7c5c]">在庫状況は随時更新されます。ご不明点はお問い合わせください。</p>
+      </div>
+
+      <!-- 配送・お支払いについて -->
+      <div class="mb-8 bg-white border border-[#e3dbc9] rounded-[16px] p-4 md:p-5 text-xs md:text-sm text-[#1c2514] grid sm:grid-cols-2 gap-x-6 gap-y-2">
+        <p class="sm:col-span-2 font-bold text-[#2d3a24] mb-1">配送・お支払いについて</p>
+        <p>・お支払い: 銀行振込のみ</p>
+        <p>・出荷: ご入金確認後3〜5営業日以内に発送</p>
+        <p>・送料: 税込33,000円以上で無料(それ未満は北海道・沖縄1,100円、その他770円)</p>
+        <p>・離島への発送はできません</p>
+        <p>・インボイス登録番号: T2010001069107</p>
+        <p>・領収書をご希望の方は注文時に宛名をご記入ください(発送後にPDFをメールでお送りします)</p>
       </div>
 
       <div id="loading-state" class="hidden text-center py-20 text-[#6b7c5c] text-sm">
@@ -1155,31 +1170,103 @@
             </div>
           </div>
           <div>
+            <label class="text-xs font-bold text-[#2d3a24]">都道府県<span class="text-red-500">*</span></label>
+            <select name="prefecture" id="prefecture-select" required class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24] bg-white">
+              <option value="" disabled selected>選択してください</option>
+              <option value="北海道">北海道</option>
+              <option value="青森県">青森県</option>
+              <option value="岩手県">岩手県</option>
+              <option value="宮城県">宮城県</option>
+              <option value="秋田県">秋田県</option>
+              <option value="山形県">山形県</option>
+              <option value="福島県">福島県</option>
+              <option value="茨城県">茨城県</option>
+              <option value="栃木県">栃木県</option>
+              <option value="群馬県">群馬県</option>
+              <option value="埼玉県">埼玉県</option>
+              <option value="千葉県">千葉県</option>
+              <option value="東京都">東京都</option>
+              <option value="神奈川県">神奈川県</option>
+              <option value="新潟県">新潟県</option>
+              <option value="富山県">富山県</option>
+              <option value="石川県">石川県</option>
+              <option value="福井県">福井県</option>
+              <option value="山梨県">山梨県</option>
+              <option value="長野県">長野県</option>
+              <option value="岐阜県">岐阜県</option>
+              <option value="静岡県">静岡県</option>
+              <option value="愛知県">愛知県</option>
+              <option value="三重県">三重県</option>
+              <option value="滋賀県">滋賀県</option>
+              <option value="京都府">京都府</option>
+              <option value="大阪府">大阪府</option>
+              <option value="兵庫県">兵庫県</option>
+              <option value="奈良県">奈良県</option>
+              <option value="和歌山県">和歌山県</option>
+              <option value="鳥取県">鳥取県</option>
+              <option value="島根県">島根県</option>
+              <option value="岡山県">岡山県</option>
+              <option value="広島県">広島県</option>
+              <option value="山口県">山口県</option>
+              <option value="徳島県">徳島県</option>
+              <option value="香川県">香川県</option>
+              <option value="愛媛県">愛媛県</option>
+              <option value="高知県">高知県</option>
+              <option value="福岡県">福岡県</option>
+              <option value="佐賀県">佐賀県</option>
+              <option value="長崎県">長崎県</option>
+              <option value="熊本県">熊本県</option>
+              <option value="大分県">大分県</option>
+              <option value="宮崎県">宮崎県</option>
+              <option value="鹿児島県">鹿児島県</option>
+              <option value="沖縄県">沖縄県</option>
+            </select>
+          </div>
+          <div>
             <label class="text-xs font-bold text-[#2d3a24]">ご住所<span class="text-red-500">*</span></label>
-            <input type="text" name="address" required class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24]" placeholder="千葉県千葉市若葉区...">
+            <input type="text" name="address" required class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24]" placeholder="千葉市若葉区...(市区町村以降)">
           </div>
           <div>
             <label class="text-xs font-bold text-[#2d3a24]">メールアドレス<span class="text-red-500">*</span></label>
             <input type="email" name="email" required class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24]" placeholder="example@mail.com">
           </div>
           <div>
+            <label class="text-xs font-bold text-[#2d3a24]">領収書宛名(ご希望の方のみ)</label>
+            <input type="text" name="receiptName" class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24]" placeholder="例: 株式会社◯◯ 御中">
+            <p class="text-[10px] text-[#6b7c5c] mt-1">ご記入いただくと、発送後に領収書PDFをメールでお送りします。</p>
+          </div>
+          <div>
             <label class="text-xs font-bold text-[#2d3a24]">備考</label>
             <textarea name="note" rows="2" class="mt-1 w-full border border-[#e3dbc9] rounded-[12px] px-3 py-2.5 text-sm focus:outline-none focus:border-[#2d3a24]" placeholder="配送に関するご要望など"></textarea>
           </div>
 
-          <div class="bg-[#f4efe6] border border-[#e3dbc9] rounded-[12px] p-4 space-y-1">
+          <div class="bg-[#f4efe6] border border-[#e3dbc9] rounded-[12px] p-4 space-y-1.5">
             <div class="flex justify-between text-xs text-[#6b7c5c]">
               <span>ご注文内容</span>
               <span id="checkout-item-count">0点</span>
             </div>
-            <div class="flex justify-between text-base font-black text-[#2d3a24]">
+            <div class="flex justify-between text-xs text-[#6b7c5c]">
+              <span>商品小計(税込)</span>
+              <span id="checkout-subtotal">¥0</span>
+            </div>
+            <div class="flex justify-between text-xs text-[#6b7c5c]">
+              <span>送料</span>
+              <span id="checkout-shipping">-</span>
+            </div>
+            <div class="flex justify-between text-base font-black text-[#2d3a24] pt-1 border-t border-[#e3dbc9]">
               <span>お支払い予定額</span>
               <span id="checkout-total">¥0</span>
             </div>
+            <p id="checkout-shipping-note" class="text-[10px] text-[#6b7c5c]"></p>
           </div>
 
+          <label class="flex items-start gap-2 text-[11px] text-[#6b7c5c] leading-relaxed">
+            <input type="checkbox" name="remoteConfirmed" required class="mt-0.5">
+            <span>配送先が離島でないことを確認しました<span class="text-red-500">*</span>(離島への発送は対応しておりません)</span>
+          </label>
+
           <p class="text-[11px] text-[#6b7c5c] leading-relaxed">
-            ご注文確定後、振込先口座と注文番号をメールにてご案内します。<b class="text-[#2d3a24]">振込時のお名前(振込人名義)には、メールに記載の注文番号を含めてご入力ください。</b>入金確認後、順次発送いたします。
+            ご注文確定後、振込先口座と注文番号をメールにてご案内します。<b class="text-[#2d3a24]">振込時のお名前(振込人名義)には、メールに記載の注文番号を含めてご入力ください。</b>入金確認後3〜5営業日以内に発送いたします。
           </p>
 
           <button type="submit" id="submit-order-btn" class="w-full bg-[#2d3a24] hover:opacity-90 text-[#fbf9f5] py-3.5 rounded-[16px] font-bold text-sm shadow-md transition">
@@ -1197,12 +1284,21 @@
           <p class="text-[10px] text-[#6b7c5c] uppercase tracking-wider">注文番号</p>
           <p id="order-number-display" class="text-xl font-black text-[#2d3a24] tracking-wider"></p>
         </div>
+        <div id="complete-amount-summary" class="bg-white border border-[#e3dbc9] rounded-[12px] p-4 mb-4 text-left text-xs text-[#1c2514] space-y-1">
+          <div class="flex justify-between"><span class="text-[#6b7c5c]">商品小計(税込)</span><span id="complete-subtotal"></span></div>
+          <div class="flex justify-between"><span class="text-[#6b7c5c]">送料</span><span id="complete-shipping"></span></div>
+          <div class="flex justify-between font-bold text-[#2d3a24] pt-1 border-t border-[#e3dbc9]"><span>合計金額</span><span id="complete-total"></span></div>
+        </div>
         <div class="bg-white border border-[#e3dbc9] rounded-[12px] p-4 mb-6 text-left text-xs text-[#1c2514] space-y-1">
           <p class="font-bold text-[#2d3a24] mb-1">お振込先</p>
           <p>〇〇銀行 〇〇支店(店番:000)</p>
           <p>普通 0000000</p>
           <p>テイクオン(カ</p>
         </div>
+        <p class="text-[10px] text-[#6b7c5c] mb-6 text-left leading-relaxed">
+          インボイス登録番号: T2010001069107<br>
+          領収書宛名をご入力いただいた場合、発送後にPDFをメールでお送りします。
+        </p>
         <button id="close-complete-btn" class="w-full bg-[#2d3a24] hover:opacity-90 text-[#fbf9f5] py-3 rounded-[16px] font-bold text-sm transition">
           閉じる
         </button>
@@ -1233,17 +1329,44 @@
         return `${url}${sep}sz=w${width}`;
       }
 
+      // 商品の画像配列を取得する(images優先、無ければ単一imageをフォールバック)
+      function getProductImages(product) {
+        if (!product) return [];
+        if (Array.isArray(product.images) && product.images.length) return product.images.filter(Boolean);
+        return product.image ? [product.image] : [];
+      }
+
+      // カルーセルの現在表示中インデックス(jan -> index)
+      const productImageIndex = {};
+
+      function currentProductImage(product) {
+        const imgs = getProductImages(product);
+        if (!imgs.length) return "https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image";
+        const idx = (productImageIndex[product.jan] || 0) % imgs.length;
+        return resizeDriveImage(imgs[idx]) || "https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image";
+      }
+
+      // カルーセルの画像を切り替える(delta: +1 or -1)。カート内サムネイル等の単一表示箇所には影響しない。
+      function changeProductImage(jan, delta) {
+        const product = products.find(p => p.jan === jan);
+        const imgs = getProductImages(product);
+        if (imgs.length <= 1) return;
+        const cur = productImageIndex[jan] || 0;
+        productImageIndex[jan] = (cur + delta + imgs.length) % imgs.length;
+        renderProductGrid();
+      }
+
       function productImageUrl(product) {
         return resizeDriveImage(product && product.image) || "https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image";
       }
 
       const MOCK_PRODUCTS = [
-        { jan: "4901234567890", jan1: "4901234567890", jan2: "", name: "サンプル商品A(一般雑貨)", description: "", price: 1200, stock: 12, image: "", category: "雑貨" },
-        { jan: "4901234567891", jan1: "4901234567891", jan2: "", name: "サンプル商品B(美容ケア用品)", description: "", price: 2480, stock: 5, image: "", category: "コスメ" },
-        { jan: "4901234567892", jan1: "4901234567892", jan2: "", name: "サンプル商品C(生活雑貨セット)", description: "", price: 980, stock: 30, image: "", category: "雑貨" },
-        { jan: "4901234567893", jan1: "4901234567893", jan2: "", name: "サンプル商品D(健康グッズ)", description: "", price: 3600, stock: 0, image: "", category: "サプリ" },
-        { jan: "4901234567894", jan1: "4901234567894", jan2: "", name: "サンプル商品E(キッチン用品)", description: "", price: 1580, stock: 8, image: "", category: "雑貨" },
-        { jan: "4901234567895", jan1: "4901234567895", jan2: "", name: "サンプル商品F(収納アイテム)", description: "", price: 2200, stock: 3, image: "", category: "食品" },
+        { cordNe: "M0001", cordAl: "000001", jan: "4901234567890", jan1: "4901234567890", jan2: "", name: "サンプル商品A(一般雑貨)", description: "", price: 1200, priceExTax: 1091, taxRate: 0.1, stock: 12, image: "", images: [], category: "雑貨" },
+        { cordNe: "M0002", cordAl: "000002", jan: "4901234567891", jan1: "4901234567891", jan2: "", name: "サンプル商品B(美容ケア用品)", description: "", price: 2480, priceExTax: 2255, taxRate: 0.1, stock: 5, image: "", images: [], category: "コスメ" },
+        { cordNe: "M0003", cordAl: "000003", jan: "4901234567892", jan1: "4901234567892", jan2: "", name: "サンプル商品C(生活雑貨セット)", description: "", price: 980, priceExTax: 891, taxRate: 0.1, stock: 30, image: "", images: [], category: "雑貨" },
+        { cordNe: "M0004", cordAl: "000004", jan: "4901234567893", jan1: "4901234567893", jan2: "", name: "サンプル商品D(健康グッズ)", description: "", price: 3600, priceExTax: 3273, taxRate: 0.1, stock: 0, image: "", images: [], category: "サプリ" },
+        { cordNe: "M0005", cordAl: "000005", jan: "4901234567894", jan1: "4901234567894", jan2: "", name: "サンプル商品E(キッチン用品)", description: "", price: 1580, priceExTax: 1436, taxRate: 0.1, stock: 8, image: "", images: [], category: "雑貨" },
+        { cordNe: "M0006", cordAl: "000006", jan: "4901234567895", jan1: "4901234567895", jan2: "", name: "サンプル商品F(収納アイテム)", description: "", price: 2200, priceExTax: 2000, taxRate: 0.1, stock: 3, image: "", images: [], category: "食品" },
       ];
 
       // SSR:FALLBACK:START
@@ -1347,13 +1470,21 @@ const SSR_FALLBACK_PRODUCTS = [{"jan":"4946324040390","jan1":"4946324040390","ja
 
         grid.innerHTML = visible.map(p => {
           const soldOut = p.stock <= 0;
+          const imgs = getProductImages(p);
+          const multiImage = imgs.length > 1;
           return `
           <div class="bg-white rounded-[16px] border border-[#e3dbc9] overflow-hidden shadow-sm flex flex-col">
             <div class="relative aspect-square bg-[#f4efe6]">
-              <img src="${productImageUrl(p)}" alt="${escapeHtml(p.name)}"
+              <img src="${currentProductImage(p)}" alt="${escapeHtml(p.name)}"
                 class="w-full h-full object-cover"
                 loading="lazy" decoding="async"
                 onerror="this.src='https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image'">
+              ${multiImage ? `
+              <button onclick="changeProductImage('${p.jan}', -1)" class="absolute left-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/40 text-white flex items-center justify-center text-xs hover:bg-black/60">‹</button>
+              <button onclick="changeProductImage('${p.jan}', 1)" class="absolute right-1 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/40 text-white flex items-center justify-center text-xs hover:bg-black/60">›</button>
+              <div class="absolute bottom-1.5 left-0 right-0 flex justify-center gap-1">
+                ${imgs.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${((productImageIndex[p.jan] || 0) % imgs.length) === i ? 'bg-white' : 'bg-white/40'}"></span>`).join('')}
+              </div>` : ''}
               ${soldOut ? `<div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                 <span class="text-white text-xs font-black tracking-wider border border-white px-3 py-1 rounded-full">SOLD OUT</span>
               </div>` : ''}
@@ -1438,6 +1569,38 @@ const SSR_FALLBACK_PRODUCTS = [{"jan":"4946324040390","jan1":"4946324040390","ja
         return Object.values(cart).reduce((sum, qty) => sum + qty, 0);
       }
 
+      // 送料計算(表示用の見積り。確定額は注文送信後にサーバー側で再計算される)
+      const FREE_SHIPPING_THRESHOLD = 33000;
+      const REMOTE_PREFECTURES = ["北海道", "沖縄県"];
+      function calcShippingFeeEstimate(prefecture, subtotal) {
+        if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
+        if (!prefecture) return null; // 未選択時は未確定
+        return REMOTE_PREFECTURES.includes(prefecture) ? 1100 : 770;
+      }
+
+      function updateCheckoutSummary() {
+        const subtotal = getCartTotal();
+        const prefSelect = document.getElementById('prefecture-select');
+        const prefecture = prefSelect ? prefSelect.value : "";
+        const shipping = calcShippingFeeEstimate(prefecture, subtotal);
+
+        document.getElementById('checkout-subtotal').textContent = `¥${subtotal.toLocaleString()}`;
+
+        const shippingEl = document.getElementById('checkout-shipping');
+        const noteEl = document.getElementById('checkout-shipping-note');
+        const totalEl = document.getElementById('checkout-total');
+
+        if (shipping === null) {
+          shippingEl.textContent = '都道府県選択後に確定';
+          totalEl.textContent = `¥${subtotal.toLocaleString()}〜`;
+          noteEl.textContent = '';
+        } else {
+          shippingEl.textContent = shipping === 0 ? '無料' : `¥${shipping.toLocaleString()}`;
+          totalEl.textContent = `¥${(subtotal + shipping).toLocaleString()}`;
+          noteEl.textContent = shipping === 0 ? '税込33,000円以上のため送料無料です。' : 'あと少しで送料無料になる場合があります(税込33,000円以上)。';
+        }
+      }
+
       function updateCartUI() {
         const items = getCartItems();
         const total = getCartTotal();
@@ -1445,8 +1608,8 @@ const SSR_FALLBACK_PRODUCTS = [{"jan":"4946324040390","jan1":"4946324040390","ja
 
         document.getElementById('cart-count').textContent = count;
         document.getElementById('cart-total').textContent = `¥${total.toLocaleString()}`;
-        document.getElementById('checkout-total').textContent = `¥${total.toLocaleString()}`;
         document.getElementById('checkout-item-count').textContent = `${count}点`;
+        updateCheckoutSummary();
 
         const itemsContainer = document.getElementById('cart-items');
         const emptyMsg = document.getElementById('cart-empty-msg');
@@ -1479,13 +1642,8 @@ const SSR_FALLBACK_PRODUCTS = [{"jan":"4946324040390","jan1":"4946324040390","ja
         `).join('');
       }
 
-      function generateOrderNumber() {
-        const now = new Date();
-        const pad = n => String(n).padStart(2, '0');
-        const datePart = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
-        const randPart = Math.floor(Math.random() * 9000 + 1000);
-        return `TO-${datePart}-${randPart}`;
-      }
+      // 注文番号はサーバー(GAS)側でyyMMddHHmmss形式(数字のみ)で採番する。
+      // クライアント側の時計ズレやフォーマット崩れを避けるため、ここでは生成しない。
 
       async function submitOrder(e) {
         e.preventDefault();
@@ -1497,18 +1655,16 @@ const SSR_FALLBACK_PRODUCTS = [{"jan":"4946324040390","jan1":"4946324040390","ja
 
         const formData = new FormData(form);
         const customer = Object.fromEntries(formData);
-        const orderNumber = generateOrderNumber();
         const items = getCartItems();
 
         const payload = {
-          orderNumber,
           customer,
-          items: items.map(i => ({ jan: i.jan, name: i.name, price: i.price, qty: i.qty })),
-          total: getCartTotal(),
+          items: items.map(i => ({ cordNe: i.cordNe, jan: i.jan, name: i.name, price: i.price, qty: i.qty })),
           createdAt: new Date().toISOString(),
         };
 
         try {
+          let result = null;
           if (ORDER_API_URL) {
             console.log("注文送信:", payload);
             const res = await fetch(ORDER_API_URL, {
@@ -1516,13 +1672,18 @@ const SSR_FALLBACK_PRODUCTS = [{"jan":"4946324040390","jan1":"4946324040390","ja
               headers: { 'Content-Type': 'text/plain' },
               body: JSON.stringify(payload),
             });
-            const result = await res.json();
+            result = await res.json();
             if (!result.ok) throw new Error(result.message || '送信失敗');
           } else {
             console.warn("ORDER_API_URL 未設定のため、注文はサーバーに送信されていません。", payload);
+            result = { orderNumber: '(テスト)', subtotal: getCartTotal(), shippingFee: 0, total: getCartTotal() };
           }
 
-          document.getElementById('order-number-display').textContent = orderNumber;
+          document.getElementById('order-number-display').textContent = result.orderNumber;
+          document.getElementById('complete-subtotal').textContent = `¥${Number(result.subtotal || 0).toLocaleString()}`;
+          document.getElementById('complete-shipping').textContent = Number(result.shippingFee || 0) === 0 ? '無料' : `¥${Number(result.shippingFee || 0).toLocaleString()}`;
+          document.getElementById('complete-total').textContent = `¥${Number(result.total || 0).toLocaleString()}`;
+
           cart = {};
           saveCart();
           updateCartUI();
@@ -1530,7 +1691,7 @@ const SSR_FALLBACK_PRODUCTS = [{"jan":"4946324040390","jan1":"4946324040390","ja
 
         } catch (err) {
           console.error("注文送信エラー:", err);
-          alert("送信に失敗しました。時間をおいて再度お試しください。");
+          alert("送信に失敗しました。時間をおいて再度お試しください。\n" + (err && err.message ? err.message : ""));
         } finally {
           submitBtn.disabled = false;
           submitBtn.textContent = originalText;
@@ -1579,6 +1740,7 @@ const SSR_FALLBACK_PRODUCTS = [{"jan":"4946324040390","jan1":"4946324040390","ja
       document.getElementById('checkout-open-btn').addEventListener('click', () => showView('checkout'));
       document.getElementById('checkout-back-btn').addEventListener('click', () => showView('cart'));
       document.getElementById('order-form').addEventListener('submit', submitOrder);
+      document.getElementById('prefecture-select').addEventListener('change', updateCheckoutSummary);
       document.getElementById('close-complete-btn').addEventListener('click', closeCart);
 
       function getCategoryFromHash() {
