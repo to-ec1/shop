@@ -231,27 +231,25 @@
       // ============================================================
       // 設定
       // ============================================================
-      // TODO: GAS APIが完成したらこのURLに差し替える
-      const PRODUCTS_API_URL = null; // 例: "https://script.google.com/macros/s/XXXX/exec?action=products"
-      const ORDER_API_URL = null;    // 例: "https://script.google.com/macros/s/XXXX/exec"
+      const PRODUCTS_API_URL = "https://script.google.com/macros/s/AKfycbw5D1RzYVBTFGontPqr8uuk1BFJCvzj5WFc91s-gN_QAEfhRiZivgUXDSuJlifSDp3h_Q/exec";
+      const ORDER_API_URL = "https://script.google.com/macros/s/AKfycbw5D1RzYVBTFGontPqr8uuk1BFJCvzj5WFc91s-gN_QAEfhRiZivgUXDSuJlifSDp3h_Q/exec";
 
-      // Google Drive画像ID → 表示用URL変換
-      // lh3.googleusercontent.com 形式の方がuc?export=viewより安定して表示される
-      function driveImageUrl(fileId, width = 500) {
-        if (!fileId) return "https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image";
-        return `https://lh3.googleusercontent.com/d/${fileId}=w${width}`;
+      // 画像URLのフォールバック(APIがimageを返さなかった場合のみ使用。
+      // 通常はCode.gs側のnormalizeImageUrl()が常に何らかのURLを返すため使われない想定)
+      function productImageUrl(product) {
+        return (product && product.image) || "https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image";
       }
 
       // ============================================================
-      // モック商品データ(GAS API実装までの仮データ。JAN/画像ID等は実データに差し替え予定)
+      // モック商品データ(GAS API未応答時のみ使用する仮データ。9列スキーマに合わせて更新)
       // ============================================================
       const MOCK_PRODUCTS = [
-        { jan: "4901234567890", name: "サンプル商品A(一般雑貨)", price: 1200, stock: 12, driveImageId: "", category: "雑貨" },
-        { jan: "4901234567891", name: "サンプル商品B(美容ケア用品)", price: 2480, stock: 5, driveImageId: "", category: "コスメ" },
-        { jan: "4901234567892", name: "サンプル商品C(生活雑貨セット)", price: 980, stock: 30, driveImageId: "", category: "雑貨" },
-        { jan: "4901234567893", name: "サンプル商品D(健康グッズ)", price: 3600, stock: 0, driveImageId: "", category: "サプリ" },
-        { jan: "4901234567894", name: "サンプル商品E(キッチン用品)", price: 1580, stock: 8, driveImageId: "", category: "雑貨" },
-        { jan: "4901234567895", name: "サンプル商品F(収納アイテム)", price: 2200, stock: 3, driveImageId: "", category: "食品" },
+        { jan: "4901234567890", jan1: "4901234567890", jan2: "", name: "サンプル商品A(一般雑貨)", description: "", price: 1200, stock: 12, image: "", category: "雑貨" },
+        { jan: "4901234567891", jan1: "4901234567891", jan2: "", name: "サンプル商品B(美容ケア用品)", description: "", price: 2480, stock: 5, image: "", category: "コスメ" },
+        { jan: "4901234567892", jan1: "4901234567892", jan2: "", name: "サンプル商品C(生活雑貨セット)", description: "", price: 980, stock: 30, image: "", category: "雑貨" },
+        { jan: "4901234567893", jan1: "4901234567893", jan2: "", name: "サンプル商品D(健康グッズ)", description: "", price: 3600, stock: 0, image: "", category: "サプリ" },
+        { jan: "4901234567894", jan1: "4901234567894", jan2: "", name: "サンプル商品E(キッチン用品)", description: "", price: 1580, stock: 8, image: "", category: "雑貨" },
+        { jan: "4901234567895", jan1: "4901234567895", jan2: "", name: "サンプル商品F(収納アイテム)", description: "", price: 2200, stock: 3, image: "", category: "食品" },
       ];
 
       // SSR:FALLBACK:START (build.mjsがビルド時点の商品データのスナップショットをここに書き込みます。手動編集不可)
@@ -365,7 +363,7 @@
           return `
           <div class="bg-white rounded-[16px] border border-[#e3dbc9] overflow-hidden shadow-sm flex flex-col">
             <div class="relative aspect-square bg-[#f4efe6]">
-              <img src="${driveImageUrl(p.driveImageId)}" alt="${escapeHtml(p.name)}"
+              <img src="${productImageUrl(p)}" alt="${escapeHtml(p.name)}"
                 class="w-full h-full object-cover"
                 onerror="this.src='https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image'">
               ${soldOut ? `<div class="absolute inset-0 bg-black/50 flex items-center justify-center">
@@ -472,7 +470,7 @@
 
         itemsContainer.innerHTML = items.map(item => `
           <div class="flex gap-3 items-start">
-            <img src="${driveImageUrl(item.driveImageId, 100)}" class="w-14 h-14 object-cover rounded-[10px] border border-[#e3dbc9]"
+            <img src="${productImageUrl(item)}" class="w-14 h-14 object-cover rounded-[10px] border border-[#e3dbc9]"
               onerror="this.src='https://placehold.co/100x100/e3dbc9/2d3a24?text=-'">
             <div class="flex-1 min-w-0">
               <p class="text-xs font-bold text-[#2d3a24] truncate">${escapeHtml(item.name)}</p>
