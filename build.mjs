@@ -130,6 +130,7 @@ function renderProductCardHtml(p) {
   const jan = escapeHtml(p.jan);
   const janJs = escapeJsSingleQuote(p.jan);
   const name = escapeHtml(p.name);
+  const description = escapeHtml(p.description);
   const price = Number(p.price) || 0;
   // Code.gs側で正規化済みの直接URL。念のため空の場合のみフォールバック。
   const imgUrl = escapeHtml(p.image || IMAGE_PLACEHOLDER_FALLBACK);
@@ -147,6 +148,13 @@ function renderProductCardHtml(p) {
             <div class="p-3 md:p-4 flex flex-col flex-1">
               <p class="text-[10px] text-[#6b7c5c] mb-1">JAN: ${jan}</p>
               <h3 class="text-xs md:text-sm font-bold text-[#2d3a24] leading-snug mb-2 flex-1">${name}</h3>
+              ${description ? `<details class="details-desc mb-2 text-[10px] text-[#6b7c5c]">
+                <summary class="cursor-pointer select-none font-bold text-[#2d3a24] flex items-center gap-1">
+                  商品説明
+                  <svg class="w-3 h-3 details-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </summary>
+                <p class="mt-1 leading-relaxed whitespace-pre-line">${description}</p>
+              </details>` : ""}
               <p class="text-base md:text-lg font-black text-[#2d3a24] mb-3">¥${price.toLocaleString("ja-JP")}</p>
               <button
                 onclick="addToCart('${janJs}')"

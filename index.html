@@ -42,6 +42,18 @@
       .toast {
         transition: transform 0.3s ease, opacity 0.3s ease;
       }
+      .details-desc summary {
+        list-style: none;
+      }
+      .details-desc summary::-webkit-details-marker {
+        display: none;
+      }
+      .details-desc .details-arrow {
+        transition: transform 0.2s ease;
+      }
+      .details-desc[open] .details-arrow {
+        transform: rotate(180deg);
+      }
     </style>
   </head>
   <body class="min-h-screen flex flex-col">
@@ -61,7 +73,7 @@
       </div>
 
       <div class="flex items-center gap-3">
-        <a href="https://take-on.example.com" class="hidden sm:inline text-xs font-medium text-[#6b7c5c] hover:text-[#2d3a24] transition-colors">
+        <a href="https://takeon.cc/" class="hidden sm:inline text-xs font-medium text-[#6b7c5c] hover:text-[#2d3a24] transition-colors">
           コーポレートサイトへ
         </a>
         <button
@@ -373,6 +385,14 @@
             <div class="p-3 md:p-4 flex flex-col flex-1">
               <p class="text-[10px] text-[#6b7c5c] mb-1">JAN: ${p.jan}</p>
               <h3 class="text-xs md:text-sm font-bold text-[#2d3a24] leading-snug mb-2 flex-1">${escapeHtml(p.name)}</h3>
+              ${p.description ? `
+              <details class="details-desc mb-2 text-[10px] text-[#6b7c5c]">
+                <summary class="cursor-pointer select-none font-bold text-[#2d3a24] flex items-center gap-1">
+                  商品説明
+                  <svg class="w-3 h-3 details-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </summary>
+                <p class="mt-1 leading-relaxed whitespace-pre-line">${escapeHtml(p.description)}</p>
+              </details>` : ''}
               <p class="text-base md:text-lg font-black text-[#2d3a24] mb-3">¥${p.price.toLocaleString()}</p>
               <button
                 onclick="addToCart('${p.jan}')"
