@@ -26,11 +26,28 @@
  *   - JSON-LD(<script type="application/ld+json">)は例外として扱われる
  *     標準形式なので、そのまま使用する。
  *
+ * 【9列スキーマ移行(2026-07-15)に伴う変更点・重要】
+ *   - GAS(Code.gs)側で画像列(Driveファイル ID / Drive共有URL / 直接URLの
+ *     いずれか)を正規化し、doGetのレスポンスの `image` フィールドに
+ *     「そのまま<img src>に使える直接URL」を入れて返すよう変更された。
+ *   - そのため、このファイルが独自に持っていた driveImageUrl()
+ *     (fileId→URL変換関数)は廃止。build.mjs側では変換ロジックを持たず、
+ *     API が返す product.image をそのまま使う(ロジックの重複・二重実装に
+ *     よるズレを防ぐため。変換ルールを変えたい場合はCode.gs側のみ直せば
+ *     良い設計にしてある)。
+ *   - product.jan は Code.gs 側で JAN1優先・無ければJAN2で解決済みの
+ *     値がそのまま入っている(jan1 / jan2 個別フィールドも参考情報として
+ *     渡ってくるが、表示・リンクにはjanを使う)。
+ *   - product.description(概要列)が新規追加。JSON-LDのdescriptionと
+ *     llms.txtに反映する。商品カード自体には現状表示しない(2列グリッドの
+ *     省スペース性を優先。カードクリックで詳細を見る導線は未実装)。
+ *
  * 【実行方法】
  *   PRODUCTS_API_URL=https://script.google.com/macros/s/XXXX/exec node build.mjs
  *
  * 【前提】
- *   - GAS doGet() のレスポンス形式: { ok: true, products: [{ jan, name, price, stock, driveImageId, category }] }
+ *   - GAS doGet() のレスポンス形式:
+ *     { ok: true, products: [{ jan, jan1, jan2, name, description, price, stock, image, category }] }
  *   - index.html に以下のマーカーが存在すること(手動で消さないこと):
  *     <!-- SSR:JSONLD:START --> ... <!-- SSR:JSONLD:END -->
  *     <!-- SSR:PRODUCTS:START --> ... <!-- SSR:PRODUCTS:END -->
@@ -53,18 +70,16 @@ const ROBOTS_PATH = path.resolve("robots.txt");
 const SITEMAP_PATH = path.resolve("sitemap.xml");
 const LLMS_PATH = path.resolve("llms.txt");
 
+// APIがimageを返さなかった場合のフォールバック(通常はCode.gs側で
+// 常にプレースホルダURLまで含めて返すため使われない想定だが、念のため用意)
+const IMAGE_PLACEHOLDER_FALLBACK = "https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image";
+
 function log(msg) {
   console.log(`[build.mjs] ${msg}`);
 }
 
 function logError(msg) {
   console.error(`[build.mjs] ❌ ${msg}`);
-}
-
-// クライアント側 driveImageUrl() と同じロジック(挙動を一致させるため)
-function driveImageUrl(fileId, width = 500) {
-  if (!fileId) return "https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image";
-  return `https://lh3.googleusercontent.com/d/${fileId}=w${width}`;
 }
 
 function escapeHtml(str) {
@@ -116,7 +131,8 @@ function renderProductCardHtml(p) {
   const janJs = escapeJsSingleQuote(p.jan);
   const name = escapeHtml(p.name);
   const price = Number(p.price) || 0;
-  const imgUrl = driveImageUrl(p.driveImageId);
+  // Code.gs側で正規化済みの直接URL。念のため空の場合のみフォールバック。
+  const imgUrl = escapeHtml(p.image || IMAGE_PLACEHOLDER_FALLBACK);
 
   return `
           <div class="bg-white rounded-[16px] border border-[#e3dbc9] overflow-hidden shadow-sm flex flex-col">
@@ -161,8 +177,9 @@ function buildJsonLd(products) {
       "@type": "Product",
       sku: String(p.jan),
       name: String(p.name || ""),
+      description: String(p.description || ""),
       category: String(p.category || "その他"),
-      image: driveImageUrl(p.driveImageId, 500),
+      image: p.image || IMAGE_PLACEHOLDER_FALLBACK,
       offers: {
         "@type": "Offer",
         priceCurrency: "JPY",
@@ -242,9 +259,11 @@ function buildLlmsTxt(products) {
     "",
     "## 商品一覧",
     "",
-    ...products.map(
-      (p) => `- ${p.name} (JAN: ${p.jan}) — ¥${(Number(p.price) || 0).toLocaleString("ja-JP")} — ${Number(p.stock) > 0 ? "在庫あり" : "在庫切れ"} — カテゴリ: ${p.category || "その他"}`
-    ),
+    ...products.map((p) => {
+      const base = `- ${p.name} (JAN: ${p.jan}) — ¥${(Number(p.price) || 0).toLocaleString("ja-JP")} — ${Number(p.stock) > 0 ? "在庫あり" : "在庫切れ"} — カテゴリ: ${p.category || "その他"}`;
+      const desc = String(p.description || "").trim();
+      return desc ? `${base}\n  概要: ${desc}` : base;
+    }),
     "",
   ];
   return lines.join("\n");
