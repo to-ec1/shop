@@ -1,0 +1,7 @@
+.git/
+.github/
+.wrangler/
+wrangler.jsonc
+Code.gs
+build.mjs
+.gitignore
