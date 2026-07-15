@@ -2,63 +2,6 @@
  * ============================================================
  * build.mjs — テイクオンストア AI-SEO静的ビルドスクリプト
  * ============================================================
- *
- * 【役割】
- *   GAS API(PRODUCTS_API_URL)から商品データを取得し、index.html の
- *   商品グリッドを「実テキストとして描画済みの静的HTML」に焼き込む。
- *   あわせてJSON-LD(schema.org Product/Offer)、robots.txt、
- *   sitemap.xml、llms.txt を生成する。
- *
- *   目的: JavaScriptを実行しないAIクローラー(ChatGPT/Perplexity/Claude等の
- *   ブラウジング機能を含む)に対しても、商品名・価格・在庫状況が
- *   最初からHTMLの可視テキストとして読める状態にすること。
- *
- * 【設計方針(2026-07-15時点で決定・README.md参照)】
- *   - ユーザー体験は変えない: このスクリプトが焼き込むのはあくまで
- *     「初期表示・クローラー向け」の静的HTML。表示後は従来通りJSが
- *     PRODUCTS_API_URLを叩いて最新在庫に更新する。
- *   - フェイルセーフ: ライブfetchが失敗した場合、クライアント側JSは
- *     このスクリプトが焼き込んだ静的HTMLを上書きしない(index.html側の
- *     init()ロジック参照)。
- *   - 非表示<script>タグへのJSON埋め込みだけでは不十分(多くのAI
- *     クローラー/テキスト抽出ツールはscript/styleの中身を除去するため)。
- *     商品名・価格などの本文は可視HTML要素(div/h3/p)として書き出す。
- *   - JSON-LD(<script type="application/ld+json">)は例外として扱われる
- *     標準形式なので、そのまま使用する。
- *
- * 【9列スキーマ移行(2026-07-15)に伴う変更点・重要】
- *   - GAS(Code.gs)側で画像列(Driveファイル ID / Drive共有URL / 直接URLの
- *     いずれか)を正規化し、doGetのレスポンスの `image` フィールドに
- *     「そのまま<img src>に使える直接URL」を入れて返すよう変更された。
- *   - そのため、このファイルが独自に持っていた driveImageUrl()
- *     (fileId→URL変換関数)は廃止。build.mjs側では変換ロジックを持たず、
- *     API が返す product.image をそのまま使う(ロジックの重複・二重実装に
- *     よるズレを防ぐため。変換ルールを変えたい場合はCode.gs側のみ直せば
- *     良い設計にしてある)。
- *   - product.jan は Code.gs 側で JAN1優先・無ければJAN2で解決済みの
- *     値がそのまま入っている(jan1 / jan2 個別フィールドも参考情報として
- *     渡ってくるが、表示・リンクにはjanを使う)。
- *   - product.description(概要列)が新規追加。JSON-LDのdescriptionと
- *     llms.txtに反映する。商品カード自体には現状表示しない(2列グリッドの
- *     省スペース性を優先。カードクリックで詳細を見る導線は未実装)。
- *
- * 【実行方法】
- *   PRODUCTS_API_URL=https://script.google.com/macros/s/XXXX/exec node build.mjs
- *
- * 【前提】
- *   - GAS doGet() のレスポンス形式:
- *     { ok: true, products: [{ jan, jan1, jan2, name, description, price, stock, image, category }] }
- *   - index.html に以下のマーカーが存在すること(手動で消さないこと):
- *     <!-- SSR:JSONLD:START --> ... <!-- SSR:JSONLD:END -->
- *     <!-- SSR:PRODUCTS:START --> ... <!-- SSR:PRODUCTS:END -->
- *     // SSR:FALLBACK:START ... // SSR:FALLBACK:END
- *
- * 【エラー時の挙動(重要)】
- *   PRODUCTS_API_URL未設定、fetch失敗、レスポンス不正のいずれの場合も、
- *   index.html等は一切書き換えずに exit(1) する。
- *   「取得できなかったので空にする」という上書きは絶対に行わない
- *   (既存の静的コンテンツを壊さないため)。
- * ============================================================
  */
 
 import { readFile, writeFile } from "node:fs/promises";
@@ -70,8 +13,6 @@ const ROBOTS_PATH = path.resolve("robots.txt");
 const SITEMAP_PATH = path.resolve("sitemap.xml");
 const LLMS_PATH = path.resolve("llms.txt");
 
-// APIがimageを返さなかった場合のフォールバック(通常はCode.gs側で
-// 常にプレースホルダURLまで含めて返すため使われない想定だが、念のため用意)
 const IMAGE_PLACEHOLDER_FALLBACK = "https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image";
 
 function log(msg) {
@@ -92,7 +33,6 @@ function escapeHtml(str) {
 }
 
 function escapeJsSingleQuote(str) {
-  // onclick="addToCart('...')" の中に安全に埋め込むため
   return String(str ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
@@ -121,10 +61,6 @@ async function fetchProducts(apiUrl) {
   return data.products;
 }
 
-// ============================================================
-// 1商品分のカードHTML(クライアント側 renderProductGrid() の
-// テンプレートと見た目・onclickハンドラを一致させる)
-// ============================================================
 function renderProductCardHtml(p) {
   const soldOut = Number(p.stock) <= 0;
   const jan = escapeHtml(p.jan);
@@ -132,7 +68,6 @@ function renderProductCardHtml(p) {
   const name = escapeHtml(p.name);
   const description = escapeHtml(p.description);
   const price = Number(p.price) || 0;
-  // Code.gs側で正規化済みの直接URL。念のため空の場合のみフォールバック。
   const imgUrl = escapeHtml(p.image || IMAGE_PLACEHOLDER_FALLBACK);
 
   return `
@@ -174,9 +109,6 @@ ${cards}
         </div>`;
 }
 
-// ============================================================
-// JSON-LD (schema.org ItemList / Product / Offer)
-// ============================================================
 function buildJsonLd(products) {
   const itemListElement = products.map((p, i) => ({
     "@type": "ListItem",
@@ -205,17 +137,11 @@ function buildJsonLd(products) {
     itemListElement,
   };
 
-  // <script>タグ内に埋め込むため、商品名等に "</script>" のような文字列が
-  // 含まれていてもタグが早期終了しないようエスケープする(JSON.stringifyは
-  // "</" を自動エスケープしないため、ここで手動対応する)。
   const jsonLdString = JSON.stringify(jsonLd, null, 2).replace(/<\/script/gi, "<\\/script");
 
   return `<script type="application/ld+json">\n${jsonLdString}\n    </script>`;
 }
 
-// ============================================================
-// マーカー間のブロック差し替え(該当マーカーが無ければ例外)
-// ============================================================
 function replaceBetweenMarkers(html, startMarker, endMarker, newContent) {
   const startIdx = html.indexOf(startMarker);
   const endIdx = html.indexOf(endMarker);
@@ -277,9 +203,6 @@ function buildLlmsTxt(products) {
   return lines.join("\n");
 }
 
-// ============================================================
-// メイン処理
-// ============================================================
 async function main() {
   log("=== ビルド開始 ===");
 
@@ -310,11 +233,13 @@ async function main() {
 
   try {
     const productGridBlock = renderProductGridBlock(products);
-    html = replaceBetweenMarkers(html, "<!-- SSR:PRODUCTS:START", "<!-- SSR:PRODUCTS:END -->", productGridBlock);
+    // ⚠️ マーカーの「閉じタグ」まで完全に一致させて安全に置換するよう修正
+    html = replaceBetweenMarkers(html, "<!-- SSR:PRODUCTS:START -->", "<!-- SSR:PRODUCTS:END -->", productGridBlock);
     log("商品グリッドの静的HTML焼き込み完了");
 
     const jsonLdBlock = buildJsonLd(products);
-    html = replaceBetweenMarkers(html, "<!-- SSR:JSONLD:START", "<!-- SSR:JSONLD:END -->", jsonLdBlock);
+    // ⚠️ 同様にJSON-LDも閉じタグを安全に扱う
+    html = replaceBetweenMarkers(html, "<!-- SSR:JSONLD:START -->", "<!-- SSR:JSONLD:END -->", jsonLdBlock);
     log("JSON-LD焼き込み完了");
 
     const fallbackJson = JSON.stringify(products).replace(/<\/script/gi, "<\\/script");
