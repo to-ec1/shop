@@ -80,7 +80,9 @@ function renderProductCardHtml(p) {
   const janJs = escapeJsSingleQuote(p.jan);
   const name = escapeHtml(p.name);
   const description = escapeHtml(p.description);
+  const category = escapeHtml(p.category || "その他");
   const price = Number(p.price) || 0;
+  const stock = Number(p.stock) || 0;
   const imgUrl = escapeHtml(resizeDriveImage(p.image) || IMAGE_PLACEHOLDER_FALLBACK);
 
   return `
@@ -90,6 +92,7 @@ function renderProductCardHtml(p) {
                 class="w-full h-full object-cover"
                 loading="lazy" decoding="async"
                 onerror="this.src='https://placehold.co/500x500/e3dbc9/2d3a24?text=No+Image'">
+              <span class="absolute top-1.5 right-1.5 bg-white/90 text-[#2d3a24] text-[9px] font-bold px-2 py-0.5 rounded-full shadow-sm">${category}</span>
               ${soldOut ? `<div class="absolute inset-0 bg-black/50 flex items-center justify-center">
                 <span class="text-white text-xs font-black tracking-wider border border-white px-3 py-1 rounded-full">SOLD OUT</span>
               </div>` : ""}
@@ -97,14 +100,15 @@ function renderProductCardHtml(p) {
             <div class="p-3 md:p-4 flex flex-col flex-1">
               <p class="text-[10px] text-[#6b7c5c] mb-1">JAN: ${jan}</p>
               <h3 class="text-xs md:text-sm font-bold text-[#2d3a24] leading-snug mb-2 flex-1">${name}</h3>
-              ${description ? `<details class="details-desc mb-2 text-[10px] text-[#6b7c5c]">
-                <summary class="cursor-pointer select-none font-bold text-[#2d3a24] flex items-center gap-1">
-                  商品説明
-                  <svg class="w-3 h-3 details-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+              ${description ? `<details class="details-desc mb-2 text-[11px] text-[#6b7c5c]">
+                <summary class="cursor-pointer select-none font-bold text-[#2d3a24] text-xs flex items-center justify-center gap-1 border border-[#e3dbc9] rounded-[10px] py-2 px-3 bg-[#f4efe6] hover:bg-[#e3dbc9] transition">
+                  商品説明を見る
+                  <svg class="w-3.5 h-3.5 details-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
                 </summary>
-                <p class="mt-1 leading-relaxed whitespace-pre-line">${description}</p>
+                <p class="mt-2 leading-relaxed whitespace-pre-line">${description}</p>
               </details>` : ""}
-              <p class="text-base md:text-lg font-black text-[#2d3a24] mb-3">¥${price.toLocaleString("ja-JP")}</p>
+              <p class="text-base md:text-lg font-black text-[#2d3a24] mb-1">${price.toLocaleString("ja-JP")}円（税込）</p>
+              <p class="text-[10px] text-[#6b7c5c] mb-3">${soldOut ? "在庫切れ" : `残り${stock}点`}</p>
               <button
                 onclick="addToCart('${janJs}')"
                 ${soldOut ? "disabled" : ""}
