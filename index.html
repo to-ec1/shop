@@ -1405,11 +1405,21 @@
           <div class="flex justify-between"><span class="text-[#6b7c5c]">送料</span><span id="complete-shipping"></span></div>
           <div class="flex justify-between font-bold text-[#2d3a24] pt-1 border-t border-[#e3dbc9]"><span>合計金額</span><span id="complete-total"></span></div>
         </div>
-        <div class="bg-white border border-[#e3dbc9] rounded-[12px] p-4 mb-6 text-left text-xs text-[#1c2514] space-y-1">
+        <div class="bg-white border border-[#e3dbc9] rounded-[12px] p-4 mb-4 text-left text-xs text-[#1c2514] space-y-1">
           <p class="font-bold text-[#2d3a24] mb-1">お振込先</p>
-          <p>〇〇銀行 〇〇支店(店番:000)</p>
-          <p>普通 0000000</p>
-          <p>テイクオン(カ</p>
+          <p>千葉銀行 稲毛支店</p>
+          <p>普通 4435024</p>
+          <p>テイクオン株式会社</p>
+        </div>
+
+        <div class="bg-white border border-[#e3dbc9] rounded-[12px] p-4 mb-6 text-left text-xs text-[#1c2514]">
+          <p class="font-bold text-[#2d3a24] mb-2">この後の流れ</p>
+          <ol class="list-decimal list-inside space-y-1.5 leading-relaxed">
+            <li>在庫確認後、<b>shop@takeon.cc</b>より仮注文完了のメールが届きます。</li>
+            <li>仮受注メール送信より、<b>24時間以内</b>にご入金ください(売買契約成立)。<br><span class="text-[#b5502f]">※ご入金がない場合は自動キャンセルとなりますのでご注意ください</span></li>
+            <li>入金確認後、3営業日程度で出荷いたします。</li>
+            <li>商品受領</li>
+          </ol>
         </div>
         <p class="text-[10px] text-[#6b7c5c] mb-6 text-left leading-relaxed">
           インボイス登録番号: T2010001069107<br>
@@ -1864,8 +1874,9 @@ const SSR_FALLBACK_PRODUCTS = [{"cordNe":"DUPCLA-PS-021142","cordAl":"021142","j
         `).join('');
       }
 
-      // 注文番号はサーバー(GAS)側でyyMMddHHmmss形式(数字のみ)で採番する。
-      // クライアント側の時計ズレやフォーマット崩れを避けるため、ここでは生成しない。
+      // 注文番号はサーバー(GAS)側でyyMMddHHmmss形式(数字のみ)で採番する(弊社管理用/スプレッドシート記録)。
+      // お客様に画面表示する番号(振込人名義に付けていただく番号)は、そこから時分(HHmm)を取り出した
+      // displayOrderNumber(4桁)。クライアント側の時計ズレやフォーマット崩れを避けるため、ここでは生成しない。
 
       async function submitOrder(e) {
         e.preventDefault();
@@ -1898,10 +1909,10 @@ const SSR_FALLBACK_PRODUCTS = [{"cordNe":"DUPCLA-PS-021142","cordAl":"021142","j
             if (!result.ok) throw new Error(result.message || '送信失敗');
           } else {
             console.warn("ORDER_API_URL 未設定のため、注文はサーバーに送信されていません。", payload);
-            result = { orderNumber: '(テスト)', subtotal: getCartTotal(), shippingFee: 0, total: getCartTotal() };
+            result = { orderNumber: '(テスト)', displayOrderNumber: '(テスト)', subtotal: getCartTotal(), shippingFee: 0, total: getCartTotal() };
           }
 
-          document.getElementById('order-number-display').textContent = result.orderNumber;
+          document.getElementById('order-number-display').textContent = result.displayOrderNumber || result.orderNumber;
           document.getElementById('complete-subtotal').textContent = `¥${Number(result.subtotal || 0).toLocaleString()}`;
           document.getElementById('complete-shipping').textContent = Number(result.shippingFee || 0) === 0 ? '無料' : `¥${Number(result.shippingFee || 0).toLocaleString()}`;
           document.getElementById('complete-total').textContent = `¥${Number(result.total || 0).toLocaleString()}`;
