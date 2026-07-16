@@ -1398,8 +1398,8 @@
       <!-- 完了画面(画面3) -->
       <div id="complete-view" class="hidden flex-1 overflow-y-auto px-6 py-8 text-center">
         <i data-lucide="check-circle-2" class="w-14 h-14 mx-auto text-[#2d3a24] mb-4"></i>
-        <h4 class="text-lg font-black text-[#2d3a24] mb-2">ご注文ありがとうございました</h4>
-        <p class="text-sm text-[#6b7c5c] mb-6">注文番号を必ずお控えください。振込人名義にこの番号をご記入ください。</p>
+        <h4 class="text-lg font-black text-[#2d3a24] mb-2">ご注文ありがとうございました　</h4>
+        <p class="text-sm text-[#6b7c5c] mb-6">まだ注文は確定していません。在庫確認次第、注文受付のメールをお送りいたします。</p>
         <div class="bg-[#f4efe6] border border-[#e3dbc9] rounded-[12px] p-4 mb-6">
           <p class="text-[10px] text-[#6b7c5c] uppercase tracking-wider">注文番号</p>
           <p id="order-number-display" class="text-xl font-black text-[#2d3a24] tracking-wider"></p>
@@ -1409,26 +1409,18 @@
           <div class="flex justify-between"><span class="text-[#6b7c5c]">送料</span><span id="complete-shipping"></span></div>
           <div class="flex justify-between font-bold text-[#2d3a24] pt-1 border-t border-[#e3dbc9]"><span>合計金額</span><span id="complete-total"></span></div>
         </div>
-        <div class="bg-white border border-[#e3dbc9] rounded-[12px] p-4 mb-4 text-left text-xs text-[#1c2514] space-y-1">
-          <p class="font-bold text-[#2d3a24] mb-1">お振込先</p>
-          <p>千葉銀行 稲毛支店</p>
-          <p>普通 4435024</p>
-          <p>テイクオン株式会社</p>
-        </div>
 
         <div class="bg-white border border-[#e3dbc9] rounded-[12px] p-4 mb-6 text-left text-xs text-[#1c2514]">
-          <p class="font-bold text-[#2d3a24] mb-2">この後の流れ</p>
+          <p class="font-bold text-[#2d3a24] mb-2">この後のメールによる流れ</p>
+          <p class="text-[10px] text-[#6b7c5c] mb-2">送信元：shop@takeon.cc</p>
           <ol class="list-decimal list-inside space-y-1.5 leading-relaxed">
-            <li>在庫確認後、<b>shop@takeon.cc</b>より仮注文完了のメールが届きます。</li>
-            <li>仮受注メール送信より、<b>24時間以内</b>にご入金ください(売買契約成立)。<br><span class="text-[#b5502f]">※ご入金がない場合は自動キャンセルとなりますのでご注意ください</span></li>
-            <li>入金確認後、3営業日程度で出荷いたします。</li>
+            <li><b>【仮注文受付】</b>この後すぐに届きます。</li>
+            <li><b>【注文受付とお振込みのご案内】</b>1営業日以内に在庫等を確認した後に届きます。欠品時はご注文数量から減数させていただく場合がございます。十分ご確認の上、ご入金ください。</li>
+            <li><b>【ご入金の確認】</b>ご入金確認をもって注文が確定いたします。<b>24時間以内</b>にご入金が確認できない場合は自動キャンセルとなりますのでご注意ください</li>
+            <li><b>【出荷のお知らせ】</b>入金確認後、3営業日程度で出荷いたします。送り状番号を記載し、領収書をメール添付いたします。</li>
             <li>商品受領</li>
           </ol>
         </div>
-        <p class="text-[10px] text-[#6b7c5c] mb-6 text-left leading-relaxed">
-          インボイス登録番号: T2010001069107<br>
-          領収書宛名をご入力いただいた場合、発送後にPDFをメールでお送りします。
-        </p>
         <button id="close-complete-btn" class="w-full bg-[#2d3a24] hover:opacity-90 text-[#fbf9f5] py-3 rounded-[16px] font-bold text-sm transition">
           閉じる
         </button>
