@@ -49,6 +49,25 @@ function escapeJsSingleQuote(str) {
   return String(str ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
 }
 
+// 同一JANの商品(通常品/アウトレット等のバリエーション)を1グループに束ねる。
+// 各商品はcord_ne単位で独立したSKUだが、フロントでは1つのカードにまとめて選択肢として表示する。
+function groupProductsByJan(products) {
+  const map = new Map();
+  for (const p of products) {
+    const key = p.jan || p.cordNe;
+    if (!map.has(key)) {
+      map.set(key, { jan: p.jan, variants: [] });
+    }
+    map.get(key).variants.push(p);
+  }
+  return Array.from(map.values());
+}
+
+// グループ内の代表バリエーションを選ぶ(在庫がある最初の1件、無ければ先頭)
+function pickDefaultVariant(variants) {
+  return variants.find((v) => Number(v.stock) > 0) || variants[0];
+}
+
 async function fetchProducts(apiUrl) {
   log(`商品データ取得開始: ${apiUrl}`);
   let res;
@@ -74,16 +93,24 @@ async function fetchProducts(apiUrl) {
   return data.products;
 }
 
-function renderProductCardHtml(p) {
-  const soldOut = Number(p.stock) <= 0;
-  const jan = escapeHtml(p.jan);
-  const janJs = escapeJsSingleQuote(p.jan);
-  const name = escapeHtml(p.name);
-  const description = escapeHtml(p.description);
-  const category = escapeHtml(p.category || "その他");
-  const price = Number(p.price) || 0;
-  const stock = Number(p.stock) || 0;
-  const imgUrl = escapeHtml(resizeDriveImage(p.image) || IMAGE_PLACEHOLDER_FALLBACK);
+function renderProductCardHtml(group) {
+  const variants = group.variants;
+  const variant = pickDefaultVariant(variants);
+  const multiVariant = variants.length > 1;
+
+  const soldOut = Number(variant.stock) <= 0;
+  const jan = escapeHtml(variant.jan);
+  const cordNeJs = escapeJsSingleQuote(variant.cordNe);
+  const name = escapeHtml(variant.name);
+  const description = escapeHtml(variant.description);
+  const category = escapeHtml(variant.category || "その他");
+  const price = Number(variant.price) || 0;
+  const stock = Number(variant.stock) || 0;
+  const imgUrl = escapeHtml(resizeDriveImage(variant.image) || IMAGE_PLACEHOLDER_FALLBACK);
+
+  const maxPrice = Math.max(...variants.map((v) => Number(v.price) || 0));
+  const discount = multiVariant && maxPrice > price ? Math.round((1 - price / maxPrice) * 100) : 0;
+  const variantLabel = escapeHtml(variant.variantLabel || "通常品");
 
   return `
           <div class="bg-white rounded-[16px] border border-[#e3dbc9] overflow-hidden shadow-sm flex flex-col">
@@ -107,10 +134,16 @@ function renderProductCardHtml(p) {
                 </summary>
                 <p class="mt-2 leading-relaxed whitespace-pre-line">${description}</p>
               </details>` : ""}
-              <p class="text-base md:text-lg font-black text-[#2d3a24] mb-1">${price.toLocaleString("ja-JP")}円（税込）</p>
-              <p class="text-[10px] text-[#6b7c5c] mb-3">${soldOut ? "在庫切れ" : `残り${stock}点`}</p>
+              <p class="text-base md:text-lg font-black text-[#2d3a24] mb-1">
+                ${price.toLocaleString("ja-JP")}円（税込）
+                ${discount > 0 ? `<span class="text-[#b5502f] text-xs font-bold ml-1">${discount}%OFF</span>` : ""}
+              </p>
+              <p class="text-[10px] text-[#6b7c5c] mb-3">
+                ${multiVariant ? `${variantLabel} / ` : ""}${soldOut ? "在庫切れ" : `残り${stock}点`}
+                ${multiVariant ? `<br>他${variants.length - 1}種類の選択肢あり` : ""}
+              </p>
               <button
-                onclick="addToCart('${janJs}')"
+                onclick="addToCart('${cordNeJs}')"
                 ${soldOut ? "disabled" : ""}
                 class="w-full text-xs font-bold py-2.5 rounded-[12px] transition ${soldOut ? "bg-[#e3dbc9] text-[#6b7c5c] cursor-not-allowed" : "bg-[#2d3a24] text-[#fbf9f5] hover:opacity-90"}"
               >
@@ -121,32 +154,52 @@ function renderProductCardHtml(p) {
 }
 
 function renderProductGridBlock(products) {
-  const cards = products.map(renderProductCardHtml).join("\n");
+  const groups = groupProductsByJan(products);
+  const cards = groups.map(renderProductCardHtml).join("\n");
   return `<div id="product-grid" class="grid grid-cols-2 gap-4 md:gap-6">
 ${cards}
         </div>`;
 }
 
 function buildJsonLd(products) {
-  const itemListElement = products.map((p, i) => ({
-    "@type": "ListItem",
-    position: i + 1,
-    item: {
-      "@type": "Product",
-      sku: String(p.jan),
-      name: String(p.name || ""),
-      description: String(p.description || ""),
-      category: String(p.category || "その他"),
-      image: p.image || IMAGE_PLACEHOLDER_FALLBACK,
-      offers: {
-        "@type": "Offer",
-        priceCurrency: "JPY",
-        price: Number(p.price) || 0,
-        availability: Number(p.stock) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-        url: `${SITE_ORIGIN}/#jan=${encodeURIComponent(p.jan)}`,
+  const groups = groupProductsByJan(products);
+
+  const itemListElement = groups.map((g, i) => {
+    const variant = pickDefaultVariant(g.variants);
+    const prices = g.variants.map((v) => Number(v.price) || 0);
+    const inStock = g.variants.some((v) => Number(v.stock) > 0);
+
+    const offers = g.variants.length > 1
+      ? {
+          "@type": "AggregateOffer",
+          priceCurrency: "JPY",
+          lowPrice: Math.min(...prices),
+          highPrice: Math.max(...prices),
+          offerCount: g.variants.length,
+          availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        }
+      : {
+          "@type": "Offer",
+          priceCurrency: "JPY",
+          price: prices[0] || 0,
+          availability: Number(variant.stock) > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+          url: `${SITE_ORIGIN}/#jan=${encodeURIComponent(g.jan)}`,
+        };
+
+    return {
+      "@type": "ListItem",
+      position: i + 1,
+      item: {
+        "@type": "Product",
+        sku: String(g.jan),
+        name: String(variant.name || ""),
+        description: String(variant.description || ""),
+        category: String(variant.category || "その他"),
+        image: variant.image || IMAGE_PLACEHOLDER_FALLBACK,
+        offers,
       },
-    },
-  }));
+    };
+  });
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -197,6 +250,7 @@ function buildSitemapXml() {
 }
 
 function buildLlmsTxt(products) {
+  const groups = groupProductsByJan(products);
   const categories = [...new Set(products.map((p) => p.category || "その他"))];
   const lines = [
     "# テイクオンストア (TAKE ON Co., Ltd.)",
@@ -206,7 +260,7 @@ function buildLlmsTxt(products) {
     "",
     `- サイトURL: ${SITE_ORIGIN}/`,
     `- 取扱カテゴリ: ${categories.join(" / ")}`,
-    `- 商品点数(公開中): ${products.length}件`,
+    `- 商品点数(公開中): ${groups.length}件 (バリエーション含むSKU数: ${products.length})`,
     `- 最終更新: ${new Date().toISOString()}`,
     "",
     "## 配送・お支払いについて",
@@ -221,10 +275,16 @@ function buildLlmsTxt(products) {
     "",
     "## 商品一覧",
     "",
-    ...products.map((p) => {
-      const base = `- ${p.name} (JAN: ${p.jan}) — ¥${(Number(p.price) || 0).toLocaleString("ja-JP")} — ${Number(p.stock) > 0 ? "在庫あり" : "在庫切れ"} — カテゴリ: ${p.category || "その他"}`;
-      const desc = String(p.description || "").trim();
-      return desc ? `${base}\n  概要: ${desc}` : base;
+    ...groups.map((g) => {
+      const variant = pickDefaultVariant(g.variants);
+      const lines2 = [`- ${variant.name} (JAN: ${g.jan}) — カテゴリ: ${variant.category || "その他"}`];
+      for (const v of g.variants) {
+        const label = v.variantLabel || (g.variants.length > 1 ? "バリエーション" : "通常品");
+        lines2.push(`  - ${label}: ¥${(Number(v.price) || 0).toLocaleString("ja-JP")} — ${Number(v.stock) > 0 ? "在庫あり" : "在庫切れ"}`);
+      }
+      const desc = String(variant.description || "").trim();
+      if (desc) lines2.push(`  概要: ${desc}`);
+      return lines2.join("\n");
     }),
     "",
   ];
